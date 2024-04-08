@@ -128,6 +128,24 @@ public class Main extends Application {
     // A map to track scheduled appointments. In a real application, this would be stored in a database.
     //private final Map<LocalDate, String> scheduledAppointments = new HashMap<>();
     private final ObservableList<String> scheduledAppointments = FXCollections.observableArrayList();
+	private String username = "";
+	private String password = "";
+    
+	public void setUsername(String s) {
+		username = s;
+	}
+    
+	public void setPassword(String s) {
+		password = s;
+	}
+	
+	public String getUsername() {
+		return username;
+	}
+	
+	public String getPassword() {
+		return password;
+	}
 	
 	@Override
     public void start(Stage primaryStage) {
@@ -145,6 +163,9 @@ public class Main extends Application {
         Scene scene = new Scene(layout, 300, 200);
         primaryStage.setScene(scene);
         primaryStage.show();
+        
+        setUsername("sd");
+        setPassword("sd");
 
         // Event Handlers for each button
         btnDoctor.setOnAction(e -> showLoginView(primaryStage, "Doctor's View"));
@@ -170,11 +191,26 @@ public class Main extends Application {
         btnCreateAccount.setOnAction(e -> showAccountCreationView(loginStage, viewTitle));
         layout.getChildren().add(btnCreateAccount);
 
+        Button btnBackError = new Button("Back");
+        btnBackError.setOnAction(e -> loginStage.close());
+        
         Button btnLogin = new Button("Log In");
         btnLogin.setOnAction(e -> {
             // For now, any login will grant access
-            loginStage.close();
-            showDashboard(viewTitle);
+        	if (txtUsername.getText().equals(username) && txtPassword.getText().equals(password)) {
+        		loginStage.close();
+                showDashboard(viewTitle);
+        	}
+        	else {
+        		VBox lay2 = new VBox(10);
+        		lay2.setAlignment(Pos.CENTER);
+        	    lay2.setPadding(new Insets(10));
+        	    Label wrongInfo = new Label("ERROR: Wrong Username or Password");
+        	    //Button btnBackError = new Button("Back");
+        	    lay2.getChildren().addAll(wrongInfo, btnBackError);
+        		Scene sceneError = new Scene(lay2, 300, 300);
+        		loginStage.setScene(sceneError);
+        	}
         });
 
         Button btnBack = new Button("Back");
@@ -182,7 +218,7 @@ public class Main extends Application {
 
         layout.getChildren().addAll(lblUsername, txtUsername, lblPassword, txtPassword, btnLogin, btnBack);
 
-        Scene scene = new Scene(layout, 300, 200);
+        Scene scene = new Scene(layout, 300, 250);
         loginStage.setScene(scene);
         loginStage.setTitle("Login - " + viewTitle);
         loginStage.showAndWait();
@@ -441,6 +477,9 @@ public class Main extends Application {
 
         Button btnSave = new Button("Save");
         btnSave.setOnAction(e -> {
+        	setUsername(txtUsername.getText());
+            setPassword(txtPassword.getText());
+            System.out.println(getUsername() + " " + getPassword());
             if ("Patient View".equals(role)) {
                 // Save patient information and generate an ID
                 String patientId = savePatientInfo(txtFirstName.getText(), txtLastName.getText(), txtEmail.getText(), txtPhone.getText());
