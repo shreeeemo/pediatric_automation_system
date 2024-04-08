@@ -8,71 +8,82 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.Modality;
+import javafx.geometry.Pos;
 
 public class Main extends Application {
 
-    @Override
+	@Override
     public void start(Stage primaryStage) {
-        // Login Page
-        Label usernameLabel = new Label("Username:");
-        TextField usernameField = new TextField();
-        Label passwordLabel = new Label("Password:");
-        PasswordField passwordField = new PasswordField();
-        Button loginButton = new Button("Log In");
+        primaryStage.setTitle("Select Dashboard");
 
-        GridPane loginGrid = new GridPane();
-        loginGrid.setAlignment(Pos.CENTER);
-        loginGrid.setHgap(10);
-        loginGrid.setVgap(10);
-        loginGrid.setPadding(new Insets(25, 25, 25, 25));
-        loginGrid.add(usernameLabel, 0, 0);
-        loginGrid.add(usernameField, 1, 0);
-        loginGrid.add(passwordLabel, 0, 1);
-        loginGrid.add(passwordField, 1, 1);
-        loginGrid.add(loginButton, 1, 2);
+        Button btnReceptionist = new Button("Receptionist View");
+        Button btnDoctor = new Button("Doctor's View");
+        Button btnNurse = new Button("Nurse's View");
+        Button btnPatient = new Button("Patient View");
 
-        Scene loginScene = new Scene(loginGrid, 300, 200);
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+        layout.setPadding(new Insets(10));
+        layout.getChildren().addAll(btnReceptionist, btnDoctor, btnNurse, btnPatient);
 
-        // Information Page
-        Label infoLabel = new Label("Enter Information");
-        Label nameLabel = new Label("Name:");
-        TextField nameField = new TextField();
-        Label ageLabel = new Label("Age:");
-        TextField ageField = new TextField();
-        Label emailLabel = new Label("Email:");
-        TextField emailField = new TextField();
-        Label extraInfoLabel = new Label("Extra Information:");
-        TextArea extraInfoArea = new TextArea();
+        Scene scene = new Scene(layout, 300, 200);
+        primaryStage.setScene(scene);
+        primaryStage.show();
 
-        VBox infoVBox = new VBox(10);
-        infoVBox.setAlignment(Pos.CENTER);
-        infoVBox.setPadding(new Insets(25, 25, 25, 25));
-        infoVBox.getChildren().addAll(infoLabel, nameLabel, nameField, ageLabel, ageField,
-                emailLabel, emailField, extraInfoLabel, extraInfoArea);
+        // Event Handlers for each button
+        btnReceptionist.setOnAction(e -> showLoginView(primaryStage, "Receptionist View"));
+        btnDoctor.setOnAction(e -> showLoginView(primaryStage, "Doctor's View"));
+        btnNurse.setOnAction(e -> showLoginView(primaryStage, "Nurse's View"));
+        btnPatient.setOnAction(e -> showLoginView(primaryStage, "Patient View"));
+    }
 
-        Scene infoScene = new Scene(infoVBox, 400, 300);
+    private void showLoginView(Stage parentStage, String viewTitle) {
+        Stage loginStage = new Stage();
+        loginStage.initModality(Modality.APPLICATION_MODAL);
+        loginStage.initOwner(parentStage);
 
-        // Button Actions
-        loginButton.setOnAction(event -> {
-            String username = usernameField.getText();
-            String password = passwordField.getText();
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+        layout.setPadding(new Insets(10));
 
-            // Check if both username and password are at least 7 characters long
-            if (username.length() >= 7 && password.length() >= 7) {
-                primaryStage.setScene(infoScene);
-            } else {
-                // Show an alert if either username or password is not long enough
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText("Invalid Username or Password");
-                alert.setContentText("Invalid Username or Password.");
-                alert.showAndWait();
-            }
+        Label lblUsername = new Label("Username:");
+        TextField txtUsername = new TextField();
+        Label lblPassword = new Label("Password:");
+        PasswordField txtPassword = new PasswordField();
+
+        Button btnLogin = new Button("Log In");
+        btnLogin.setOnAction(e -> {
+            // For now, any login will grant access
+            loginStage.close();
+            showDashboard(viewTitle);
         });
 
-        primaryStage.setScene(loginScene);
-        primaryStage.setTitle("Login Application");
-        primaryStage.show();
+        Button btnBack = new Button("Back");
+        btnBack.setOnAction(e -> loginStage.close());
+
+        layout.getChildren().addAll(lblUsername, txtUsername, lblPassword, txtPassword, btnLogin, btnBack);
+
+        Scene scene = new Scene(layout, 300, 200);
+        loginStage.setScene(scene);
+        loginStage.setTitle("Login - " + viewTitle);
+        loginStage.showAndWait();
+    }
+
+    private void showDashboard(String viewTitle) {
+        Stage dashboardStage = new Stage();
+        dashboardStage.setTitle(viewTitle);
+
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+        layout.setPadding(new Insets(10));
+        
+        Label lblPlaceholder = new Label("Placeholder for " + viewTitle);
+        layout.getChildren().add(lblPlaceholder);
+
+        Scene scene = new Scene(layout, 400, 300);
+        dashboardStage.setScene(scene);
+        dashboardStage.show();
     }
 
     public static void main(String[] args) {
