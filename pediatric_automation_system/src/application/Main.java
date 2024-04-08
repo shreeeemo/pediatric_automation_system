@@ -483,6 +483,7 @@ public class Main extends Application {
             return null;
         }
     }
+    
 
     // Show an alert dialog
     private void showAlert(String title, String message) {
@@ -491,42 +492,6 @@ public class Main extends Application {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-    
-    private String createPatientAccount(String firstName, String lastName, String email, String phoneNumber) {
-        // Generate a unique ID for the patient; here we just use a simple UUID for demonstration
-        String patientId = UUID.randomUUID().toString();
-        
-        // Create a new PatientDetails object
-        PatientDetails details = new PatientDetails();
-        // Set any initial values or leave blank
-        
-        // Create a file for the patient using their ID
-        try (PrintWriter out = new PrintWriter(new FileWriter("patients/" + patientId + ".txt"))) {
-            out.println(new Gson().toJson(details)); // Using Gson to convert the PatientDetails object to JSON
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null; // On failure, return null
-        }
-        
-        return patientId; // Return the unique ID
-    }
-    
-    private PatientDetails readPatientDetails(String patientId) {
-        try (Reader reader = new FileReader("patients/" + patientId + ".txt")) {
-            return new Gson().fromJson(reader, PatientDetails.class); // Convert JSON back into PatientDetails object
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null; // On failure, return null
-        }
-    }
-
-    private void writePatientDetails(String patientId, PatientDetails details) {
-        try (Writer writer = new FileWriter("patients/" + patientId + ".txt")) {
-            new Gson().toJson(details, writer); // Write the updated details back to the file
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 
