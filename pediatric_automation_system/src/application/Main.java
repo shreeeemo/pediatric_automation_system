@@ -1,538 +1,703 @@
 package application;
-
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.stage.Modality;
-import javafx.geometry.Pos;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.control.ListView;
-import javafx.scene.control.cell.TextFieldListCell;
-import javafx.util.StringConverter;
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.io.File;
+import javafx.scene.control.ScrollPane;
+
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Main extends Application {
- 
-	private final Map<String, PatientDetails> patientDetailsMap = new HashMap<>();
 
-	public class PatientDetails {
-	    private String height;
-	    private String weight;
-	    private String bloodPressure;
-	    private String temperature;
-	    private String healthConcerns;
-	    private String prescription;
+    private Stage primaryStage;
+    private String userType;
+    private Map<String, String> accounts;
+    private Scene mainScene; // Store the main scene as a class variable
 
-	    // Constructor
-	    public PatientDetails() {
-	        // Initialize with default empty strings or any default values
-	        this.height = "";
-	        this.weight = "";
-	        this.bloodPressure = "";
-	        this.temperature = "";
-	        this.healthConcerns = "";
-	        this.prescription = "";
-	    }
+    // Appointment scheduler fields
+    private TextField nameField;
+    private TextField ageField;
+    private DatePicker datePicker;
+    private TextField healthIssuesField;
+    private TextField insuranceField;
+    private ComboBox<String> pharmacyComboBox;
 
-	    // Getters and setters for each vital sign and other details
+    // Temporary variables to store appointment information
+    private String name;
+    private int age;
+    private String selectedDate;
+    private String healthIssues;
+    private String insurance;
+    private String pharmacy;
 
-	    public String getHeight() {
-	        return height;
-	    }
+    // Nurse view fields
+    private List<PatientAppointment> appointments;
 
-	    public void setHeight(String height) {
-	        this.height = height;
-	    }
+    public class PatientAppointment {
+        private String name;
+        private int age;
+        private String date;
+        private String healthIssues;
+        private String insurance;
+        private String pharmacy;
+        private double height;
+        private double weight;
+        private String bloodPressure;
+        private double temperature;
+        private String healthConcerns;
 
-	    public String getWeight() {
-	        return weight;
-	    }
+        // Doctor-specific fields
+        private String heartRate;
+        private String skinIrregularities;
+        private String reflexes;
+        private String other;
+        private String currentMedication;
+        private String UpdateReport;
 
-	    public void setWeight(String weight) {
-	        this.weight = weight;
-	    }
+        public PatientAppointment(String name, int age, String date, String healthIssues, String insurance, String pharmacy) {
+            this.name = name;
+            this.age = age;
+            this.date = date;
+            this.healthIssues = healthIssues;
+            this.insurance = insurance;
+            this.pharmacy = pharmacy;
+            this.height = 0.0; // Default value
+            this.weight = 0.0; // Default value
+            this.temperature = 0.0; // Default value
+            this.bloodPressure = ""; // Default value
+            this.healthConcerns = ""; // Default value
+            // Initialize doctor-specific fields
+            this.heartRate = "";
+            this.skinIrregularities = "";
+            this.reflexes = "";
+            this.other = "";
+            this.currentMedication = "";
+            this.UpdateReport= "";
+        }
 
-	    public String getBloodPressure() {
-	        return bloodPressure;
-	    }
+        // Getters and setters for doctor-specific fields
+        public String getHeartRate() {
+            return heartRate;
+        }
 
-	    public void setBloodPressure(String bloodPressure) {
-	        this.bloodPressure = bloodPressure;
-	    }
+        public void setHeartRate(String heartRate) {
+            this.heartRate = heartRate;
+        }
 
-	    public String getTemperature() {
-	        return temperature;
-	    }
+        public String getSkinIrregularities() {
+            return skinIrregularities;
+        }
 
-	    public void setTemperature(String temperature) {
-	        this.temperature = temperature;
-	    }
+        public void setSkinIrregularities(String skinIrregularities) {
+            this.skinIrregularities = skinIrregularities;
+        }
 
-	    public String getHealthConcerns() {
-	        return healthConcerns;
-	    }
+        public String getReflexes() {
+            return reflexes;
+        }
 
-	    public void setHealthConcerns(String healthConcerns) {
-	        this.healthConcerns = healthConcerns;
-	    }
+        public void setReflexes(String reflexes) {
+            this.reflexes = reflexes;
+        }
 
-	    public String getPrescription() {
-	        return prescription;
-	    }
+        public String getOther() {
+            return other;
+        }
 
-	    public void setPrescription(String prescription) {
-	        this.prescription = prescription;
-	    }
+        public void setOther(String other) {
+            this.other = other;
+        }
 
-	    public String getVitals() {
-	        return "Height: " + height + ", Weight: " + weight + ", Blood Pressure: " + bloodPressure + ", Temperature: " + temperature;
-	    }
-	    
-	    public void setVitals(String height, String weight, String bloodPressure, String temperature) {
-	        this.height = height;
-	        this.weight = weight;
-	        this.bloodPressure = bloodPressure;
-	        this.temperature = temperature;
-	    }
+        public String getCurrentMedication() {
+            return currentMedication;
+        }
 
-	    @Override
-	    public String toString() {
-	        return "PatientDetails{" +
-	               "height='" + height + '\'' +
-	               ", weight='" + weight + '\'' +
-	               ", bloodPressure='" + bloodPressure + '\'' +
-	               ", temperature='" + temperature + '\'' +
-	               ", healthConcerns='" + healthConcerns + '\'' +
-	               ", prescription='" + prescription + '\'' +
-	               '}';
-	    }
-	}
+        public void setCurrentMedication(String currentMedication) {
+            this.currentMedication = currentMedication;
+        }
+        
+        public String getUpdateReport() {
+        	return UpdateReport;
+        }
+        
+        public void setUpdateReport(String UpdateReport) {
+        	this.UpdateReport = UpdateReport;
+        }
 
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getAge() {
+            return age;
+        }
+
+        public void setAge(int age) {
+            this.age = age;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public String getHealthIssues() {
+            return healthIssues;
+        }
+
+        public void setHealthIssues(String healthIssues) {
+            this.healthIssues = healthIssues;
+        }
+
+        public String getInsurance() {
+            return insurance;
+        }
+
+        public void setInsurance(String insurance) {
+            this.insurance = insurance;
+        }
+
+        public String getPharmacy() {
+            return pharmacy;
+        }
+
+        public void setPharmacy(String pharmacy) {
+            this.pharmacy = pharmacy;
+        }
+
+        public double getHeight() {
+            return height;
+        }
+
+        public void setHeight(double height) {
+            this.height = height;
+        }
+
+        public double getWeight() {
+            return weight;
+        }
+
+        public void setWeight(double weight) {
+            this.weight = weight;
+        }
+
+        public String getBloodPressure() {
+            return bloodPressure;
+        }
+
+        public void setBloodPressure(String bloodPressure) {
+            this.bloodPressure = bloodPressure;
+        }
+
+        public double getTemperature() {
+            return temperature;
+        }
+
+        public void setTemperature(double temperature) {
+            this.temperature = temperature;
+        }
+
+        public String getHealthConcerns() {
+            return healthConcerns;
+        }
+
+        public void setHealthConcerns(String healthConcerns) {
+            this.healthConcerns = healthConcerns;
+        }
+    }
     
-	// Assuming these are predefined for simplicity
-    private final String[] timeSlots = {"9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"};
-    private final String[] pharmacies = {"CVS Pharmacy", "Walgreens", "Walmart Pharmacy"};
-    // A map to track scheduled appointments. In a real application, this would be stored in a database.
-    //private final Map<LocalDate, String> scheduledAppointments = new HashMap<>();
-    private final ObservableList<String> scheduledAppointments = FXCollections.observableArrayList();
-	private String username = "";
-	private String password = "";
-    
-	public void setUsername(String s) {
-		username = s;
-	}
-    
-	public void setPassword(String s) {
-		password = s;
-	}
-	
-	public String getUsername() {
-		return username;
-	}
-	
-	public String getPassword() {
-		return password;
-	}
-	
-	@Override
+    // Directory to store patient files
+    private static final String PATIENT_FILES_DIRECTORY = "";
+
+    // Map to store patient file writers
+    private Map<String, BufferedWriter> patientFileWriters;
+
+
+    @Override
     public void start(Stage primaryStage) {
-		primaryStage.setTitle("Select Dashboard");
+    	// Initialize the map to store patient file writers
+        patientFileWriters = new HashMap<>();
+        this.primaryStage = primaryStage;
+        this.accounts = new HashMap<>();
+        this.appointments = new ArrayList<>();
 
-        Button btnDoctor = new Button("Doctor's View");
-        Button btnNurse = new Button("Nurse's View");
-        Button btnPatient = new Button("Patient View");
+        // Creating buttons
+        Button doctorsViewBtn = new Button("Doctor's View");
+        Button nursesViewBtn = new Button("Nurse's View");
+        Button patientsViewBtn = new Button("Patient's View");
 
-        VBox layout = new VBox(10);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(10));
-        layout.getChildren().addAll(btnDoctor, btnNurse, btnPatient);
-
-        Scene scene = new Scene(layout, 300, 200);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-        
-        setUsername("sd");
-        setPassword("sd");
-
-        // Event Handlers for each button
-        btnDoctor.setOnAction(e -> showLoginView(primaryStage, "Doctor's View"));
-        btnNurse.setOnAction(e -> showLoginView(primaryStage, "Nurse's View"));
-        btnPatient.setOnAction(e -> showPatientPortal(primaryStage, "Patient's View"));
-    }
-
-    private void showLoginView(Stage parentStage, String viewTitle) {
-        Stage loginStage = new Stage();
-        loginStage.initModality(Modality.APPLICATION_MODAL);
-        loginStage.initOwner(parentStage);
-
-        VBox layout = new VBox(10);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(10));
-
-        Label lblUsername = new Label("Username:");
-        TextField txtUsername = new TextField();
-        Label lblPassword = new Label("Password:");
-        PasswordField txtPassword = new PasswordField();
-        
-        Button btnCreateAccount = new Button("Create Account");
-        btnCreateAccount.setOnAction(e -> showAccountCreationView(loginStage, viewTitle));
-        layout.getChildren().add(btnCreateAccount);
-
-        Button btnBackError = new Button("Back");
-        btnBackError.setOnAction(e -> loginStage.close());
-        
-        Button btnLogin = new Button("Log In");
-        btnLogin.setOnAction(e -> {
-            // For now, any login will grant access
-        	if (txtUsername.getText().equals(username) && txtPassword.getText().equals(password)) {
-        		loginStage.close();
-                showDashboard(viewTitle);
-        	}
-        	else {
-        		VBox lay2 = new VBox(10);
-        		lay2.setAlignment(Pos.CENTER);
-        	    lay2.setPadding(new Insets(10));
-        	    Label wrongInfo = new Label("ERROR: Wrong Username or Password");
-        	    //Button btnBackError = new Button("Back");
-        	    lay2.getChildren().addAll(wrongInfo, btnBackError);
-        		Scene sceneError = new Scene(lay2, 300, 300);
-        		loginStage.setScene(sceneError);
-        	}
-        });
-
-        Button btnBack = new Button("Back");
-        btnBack.setOnAction(e -> loginStage.close());
-
-        layout.getChildren().addAll(lblUsername, txtUsername, lblPassword, txtPassword, btnLogin, btnBack);
-
-        Scene scene = new Scene(layout, 300, 250);
-        loginStage.setScene(scene);
-        loginStage.setTitle("Login - " + viewTitle);
-        loginStage.showAndWait();
-    }
-    
-    private void showPatientPortal(Stage primaryStage, String patientName) {
-    	PatientDetails patientDetails = patientDetailsMap.getOrDefault(patientName, new PatientDetails());
-    	
-    	VBox layout = new VBox(10);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(10));
-
-        Label vitalsLabel = new Label("Vitals: " + (patientDetails.getVitals().isEmpty() ? "Not provided" : patientDetails.getVitals()));
-        Label healthConcernsLabel = new Label("Health Concerns: " + (patientDetails.getHealthConcerns().isEmpty() ? "None" : patientDetails.getHealthConcerns()));
-        Label prescriptionLabel = new Label("Prescription: " + (patientDetails.getPrescription().isEmpty() ? "None" : patientDetails.getPrescription()));
-        
-        DatePicker datePicker = new DatePicker();
-        datePicker.setValue(LocalDate.now().plusDays(1));  // Default to the next day
-        datePicker.setDayCellFactory(picker -> new DateCell() {
-            public void updateItem(LocalDate date, boolean empty) {
-                super.updateItem(date, empty);
-                setDisable(empty || date.compareTo(LocalDate.now()) < 0);
+        // Setting action for each button
+        doctorsViewBtn.setOnAction(e -> {
+        	// Check if there are appointments available
+            if (!appointments.isEmpty()) {
+                showDoctorView(); 
+            } else {
+                // Show an alert if there are no appointments
+                showAlert("No Appointments", "There are no appointments scheduled.");
             }
         });
-
-        ComboBox<String> timeSlotComboBox = new ComboBox<>();
-        timeSlotComboBox.getItems().addAll(timeSlots);
-
-        TextArea healthCommentsArea = new TextArea();
-        healthCommentsArea.setPromptText("Enter your health issue...");
-
-        TextField insuranceField = new TextField();
-        insuranceField.setPromptText("Enter your insurance...");
-
-        ComboBox<String> pharmacyComboBox = new ComboBox<>();
-        pharmacyComboBox.getItems().addAll(pharmacies);
-
-        Button submitButton = new Button("Schedule Appointment");
-        submitButton.setOnAction(e -> {
-            LocalDate selectedDate = datePicker.getValue();
-            String selectedTime = timeSlotComboBox.getValue();
-            String healthIssueComment = healthCommentsArea.getText();
-            String insuranceInfo = insuranceField.getText();
-            String selectedPharmacy = pharmacyComboBox.getValue();
-
-            String appointmentDetails = selectedDate + " " + selectedTime + " - Health Issue: " + healthIssueComment
-                                        + " - Insurance: " + insuranceInfo + " - Pharmacy: " + selectedPharmacy;
-
-            scheduledAppointments.add(appointmentDetails);
-            System.out.println("Appointment scheduled: " + appointmentDetails);
-            primaryStage.close();
+        // Update the nursesViewBtn.setOnAction() method to pass the PatientAppointment object
+        nursesViewBtn.setOnAction(e -> {
+            // Check if there are appointments available
+            if (!appointments.isEmpty()) {
+                // For simplicity, just display the nurse view for the first appointment
+                showNurseView(appointments.get(0)); // Pass the first appointment to showNurseView()
+            } else {
+                // Show an alert if there are no appointments
+                showAlert("No Appointments", "There are no appointments scheduled.");
+            }
+        });
+        patientsViewBtn.setOnAction(e -> {
+            userType = "Patient";
+            showLoginPage();
         });
 
-        layout.getChildren().addAll(
-                new Label(patientName + "'s Patient Portal"),
-                vitalsLabel,
-                healthConcernsLabel,
-                prescriptionLabel,
-                new Label("Schedule Your Appointment"),
-                datePicker,
-                timeSlotComboBox,
-                new Label("Health Issue Comment"),
-                healthCommentsArea,
-                new Label("Insurance Information"),
-                insuranceField,
-                new Label("Select Pharmacy"),
-                pharmacyComboBox,
-                submitButton
-        );
+        // Adding buttons to a VBox layout
+        VBox root = new VBox(10);
+        root.getChildren().addAll(doctorsViewBtn, nursesViewBtn, patientsViewBtn);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(50));
 
-        Scene scene = new Scene(layout);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Patient Portal");
+        // Creating main scene
+        mainScene = new Scene(root, 300, 200);
+
+        // Setting the stage
+        primaryStage.setTitle("View Selector");
+        primaryStage.setScene(mainScene);
         primaryStage.show();
     }
     
-    private void showNurseDashboard(Stage primaryStage, String nurseUsername) {
-    	ListView<String> listView = new ListView<>(scheduledAppointments);
-        listView.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            public void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setText(null);
+    // Method to create a text file for a patient account
+    private void createPatientFile(String name) {
+        String fileName = PATIENT_FILES_DIRECTORY + name + ".txt";
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+            patientFileWriters.put(name, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to update patient file with all information
+    private void updatePatientFile(PatientAppointment appointment) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("patient_" + appointment.getName() + ".txt", true))) {
+            writer.write("Name: " + appointment.getName());
+            writer.newLine();
+            writer.write("Age: " + appointment.getAge());
+            writer.newLine();
+            writer.write("Date: " + appointment.getDate());
+            writer.newLine();
+            writer.write("Health Issues: " + appointment.getHealthIssues());
+            writer.newLine();
+            writer.write("Insurance: " + appointment.getInsurance());
+            writer.newLine();
+            writer.write("Pharmacy: " + appointment.getPharmacy());
+            writer.newLine();
+            writer.write("Height: " + appointment.getHeight());
+            writer.newLine();
+            writer.write("Weight: " + appointment.getWeight());
+            writer.newLine();
+            writer.write("Blood Pressure: " + appointment.getBloodPressure());
+            writer.newLine();
+            writer.write("Temperature: " + appointment.getTemperature());
+            writer.newLine();
+            writer.write("Health Concerns: " + appointment.getHealthConcerns());
+            writer.newLine();
+            writer.write("Heart Rate: " + appointment.getHeartRate());
+            writer.newLine();
+            writer.write("Skin Irregularities: " + appointment.getSkinIrregularities());
+            writer.newLine();
+            writer.write("Reflexes: " + appointment.getReflexes());
+            writer.newLine();
+            writer.write("Other: " + appointment.getOther());
+            writer.newLine();
+            writer.write("Update Report: " + appointment.getUpdateReport());
+            writer.newLine();
+            writer.write("Prescribed Medication: " + appointment.getCurrentMedication());
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to close the patient file writer
+    private void closePatientFile(String username) {
+        BufferedWriter writer = patientFileWriters.get(username);
+        try {
+            if (writer != null) {  // Check if writer is not null
+                writer.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to show login page
+    private void showLoginPage() {
+        // Creating login page elements
+        Label titleLabel = new Label("Login");
+        Label usernameLabel = new Label("Username:");
+        Label passwordLabel = new Label("Password:");
+        TextField usernameField = new TextField();
+        PasswordField passwordField = new PasswordField();
+        Button loginButton = new Button("Login");
+        Button createAccountButton = new Button("Create Account");
+        Button backToMainButton = new Button("Back to Main");
+        VBox loginBox = new VBox(10);
+        loginBox.getChildren().addAll(titleLabel, usernameLabel, usernameField, passwordLabel, passwordField, loginButton, createAccountButton, backToMainButton);
+        loginBox.setAlignment(Pos.CENTER);
+        loginBox.setPadding(new Insets(20));
+
+        // Setting action for login button
+        loginButton.setOnAction(e -> {
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText().trim();
+            if (username.isEmpty() || password.isEmpty()) {
+                showAlert("Error", "Please enter both username and password.");
+            } else {
+                // For simplicity, check if the account exists
+                if (accounts.containsKey(username) && accounts.get(username).equals(userType)) {
+                    // Perform login verification
+                    // For simplicity, just show a message for now
+                    showAlert("Login Successful", "Welcome " + userType + "!");
+                    if (userType.equals("Patient")) {
+                        showAppointmentScheduler();
+                    } 
                 } else {
-                    // Customize display for Nurse's view if needed
-                    String[] parts = item.split(" - ");
-                    setText(parts[1]); // Display patient's name
+                    showAlert("Error", "The account doesn't exist or the user type doesn't match.");
                 }
             }
         });
+        // Wrap the doctor view layout in a ScrollPane
+        ScrollPane scrollPane = new ScrollPane(loginBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
 
-        listView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                showPatientDetailsForNurse(primaryStage, newVal, nurseUsername);
+        // Setting action for create account button
+        createAccountButton.setOnAction(e -> showCreateAccountPage());
+
+        // Setting action for back to main button
+        backToMainButton.setOnAction(e -> primaryStage.setScene(mainScene)); // Go back to the main scene
+
+        // Creating scene
+        Scene loginScene = new Scene(scrollPane, 300, 200);
+
+        // Setting the stage
+        primaryStage.setScene(loginScene);
+        primaryStage.setTitle("Login - " + userType);
+    }
+    
+    // Method to show create account page
+    private void showCreateAccountPage() {
+        // Creating create account page elements
+        Label titleLabel = new Label("Create Account");
+        Label usernameLabel = new Label("Username:");
+        Label passwordLabel = new Label("Password:");
+        TextField usernameField = new TextField();
+        PasswordField passwordField = new PasswordField();
+        Button createButton = new Button("Create");
+        Button backToMainButton = new Button("Back to Main");
+        VBox createAccountBox = new VBox(10);
+        createAccountBox.getChildren().addAll(titleLabel, usernameLabel, usernameField, passwordLabel, passwordField, createButton, backToMainButton);
+        createAccountBox.setAlignment(Pos.CENTER);
+        createAccountBox.setPadding(new Insets(20));
+
+        // Setting action for create button
+        createButton.setOnAction(e -> {
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText().trim();
+            if (username.isEmpty() || password.isEmpty()) {
+                showAlert("Error", "Please enter both username and password.");
+            } else {
+                // For simplicity, just show a message for now
+                showAlert("Account Created", "Your " + userType + " account has been created successfully!");
+                accounts.put(username, userType); // Keep track of the created account
+                createPatientFile(username); // Create a text file for the patient account
+                primaryStage.setScene(mainScene); // Go back to the main scene
             }
         });
-
-        VBox layout = new VBox(10, new Label(nurseUsername + "'s Dashboard"), listView);
-        layout.setPadding(new Insets(10));
-        layout.setAlignment(Pos.CENTER);
-
-        Scene scene = new Scene(layout, 400, 500);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Nurse's Dashboard");
-        primaryStage.show();
-    }
-    
-    private void showPatientDetailsForNurse(Stage parentStage, String appointmentDetails, String username) {
-        // Extract the patient name from appointment details
-        String patientName = appointmentDetails.split(" - ")[1];
-
-        // Get or create patient details
-        PatientDetails patientDetails = patientDetailsMap.getOrDefault(patientName, new PatientDetails());
-
-        // UI Components for vitals
-        TextField heightField = new TextField(patientDetails.getHeight());
-        TextField weightField = new TextField(patientDetails.getWeight());
-        TextField bloodPressureField = new TextField(patientDetails.getBloodPressure());
-        TextField temperatureField = new TextField(patientDetails.getTemperature());
-        TextArea healthConcernsArea = new TextArea(patientDetails.getHealthConcerns());
-
-        Button saveButton = new Button("Save Vitals and Concerns");
-        saveButton.setOnAction(e -> {
-            patientDetails.setVitals(
-                heightField.getText(), 
-                weightField.getText(), 
-                bloodPressureField.getText(), 
-                temperatureField.getText()
-            );
-            patientDetails.setHealthConcerns(healthConcernsArea.getText());
-            patientDetailsMap.put(patientName, patientDetails);
-
-            System.out.println("Saved details for " + patientName);
-            parentStage.close();
-        });
-
-        GridPane gridPane = new GridPane();
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
-        gridPane.setPadding(new Insets(10));
-
-        gridPane.add(new Label("Height:"), 0, 0);
-        gridPane.add(heightField, 1, 0);
-        gridPane.add(new Label("Weight:"), 0, 1);
-        gridPane.add(weightField, 1, 1);
-        gridPane.add(new Label("Blood Pressure:"), 0, 2);
-        gridPane.add(bloodPressureField, 1, 2);
-        gridPane.add(new Label("Temperature:"), 0, 3);
-        gridPane.add(temperatureField, 1, 3);
-        gridPane.add(new Label("Health Concerns:"), 0, 4);
-        gridPane.add(healthConcernsArea, 1, 4);
-
-        // Save button at the bottom
-        gridPane.add(saveButton, 1, 5);
-
-        // Create a new scene and stage for patient details or use a pop-up
-        Scene scene = new Scene(gridPane);
-        Stage detailsStage = new Stage();
-        detailsStage.setTitle("Patient Details for " + patientName);
-        detailsStage.setScene(scene);
-        detailsStage.initOwner(parentStage);
-        detailsStage.initModality(Modality.WINDOW_MODAL);
-        detailsStage.showAndWait();
-    
-    }
-    
-    private void showDoctorDashboard(Stage primaryStage, String doctorUsername) {
-        VBox layout = new VBox(10);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(10));
         
-        // Retrieve scheduled appointments from the in-memory storage
-        // In a real application, replace this with a call to a database
-        for (String appointmentDetails : scheduledAppointments) {
-            // Splitting the details for the demonstration purpose
-            String[] details = appointmentDetails.split(" - ");
-            String time = details[0].split(" ")[1];
-            String patientName = details[1];
-            String healthIssue = details[2];
+        // Wrap the doctor view layout in a ScrollPane
+        ScrollPane scrollPane = new ScrollPane(createAccountBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
 
-            // Display each appointment detail with additional fields
-            HBox appointmentBox = new HBox(10);
-            appointmentBox.setStyle("-fx-border-color: black; -fx-padding: 5;");
+        // Setting action for back to main button
+        backToMainButton.setOnAction(e -> primaryStage.setScene(mainScene)); // Go back to the main scene
+
+        // Creating scene
+        Scene createAccountScene = new Scene(scrollPane, 300, 200);
+
+        // Setting the stage
+        primaryStage.setScene(createAccountScene);
+        primaryStage.setTitle("Create Account - " + userType);
+    }
+
+    // Method to show the appointment scheduler
+    private void showAppointmentScheduler() {
+        // Appointment scheduler elements
+        Label titleLabel = new Label("Appointment Scheduler");
+        nameField = new TextField();
+        nameField.setPromptText("Enter your name");
+        ageField = new TextField();
+        ageField.setPromptText("Enter your age");
+        datePicker = new DatePicker();
+        healthIssuesField = new TextField();
+        healthIssuesField.setPromptText("Enter health issues");
+        insuranceField = new TextField();
+        insuranceField.setPromptText("Enter insurance details");
+        Label pharmacyLabel = new Label("Pharmacy:");
+        pharmacyComboBox = new ComboBox<>();
+        pharmacyComboBox.setItems(FXCollections.observableArrayList("CVS", "Walgreens", "Walmart"));
+        Button scheduleButton = new Button("Schedule Appointment");
+        Button backToMainButton = new Button("Back to Main");
+
+        // Back button action
+        backToMainButton.setOnAction(e -> primaryStage.setScene(mainScene));
+
+        // Schedule button action
+        scheduleButton.setOnAction(e -> {
+            // Save the entered information
+            name = nameField.getText();
+            age = Integer.parseInt(ageField.getText());
+            selectedDate = datePicker.getValue().toString();
+            healthIssues = healthIssuesField.getText();
+            insurance = insuranceField.getText();
+            pharmacy = pharmacyComboBox.getValue();
+
+            // Create a new PatientAppointment object with the entered information
+            PatientAppointment appointment = new PatientAppointment(name, age, selectedDate, healthIssues, insurance, pharmacy);
+
+            // Add the appointment to the list of appointments
+            appointments.add(appointment);
+
+            // For now, just print the information
+            System.out.println("Name: " + name);
+            System.out.println("Age: " + age);
+            System.out.println("Date: " + selectedDate);
+            System.out.println("Health Issues: " + healthIssues);
+            System.out.println("Insurance: " + insurance);
+            System.out.println("Pharmacy: " + pharmacy);
+
+            // Call showNurseView() with the created PatientAppointment object
+            showNurseView(appointment);
             
-            VBox leftColumn = new VBox(5);
-            Label lblTime = new Label(time);
-            Label lblPatientName = new Label("Patient: " + patientName);
-            TextArea healthConcernsArea = new TextArea(healthIssue);
-            healthConcernsArea.setEditable(false); // assuming the nurse has filled this
-            
-            leftColumn.getChildren().addAll(lblTime, lblPatientName, new Label("Health Concerns:"), healthConcernsArea);
-            
-            VBox rightColumn = new VBox(5);
-            TextArea prescriptionArea = new TextArea();
-            prescriptionArea.setPromptText("Prescription Details");
-            Button sendPrescriptionButton = new Button("Send to Preferred Pharmacy");
-            sendPrescriptionButton.setOnAction(e -> {
-                // Logic to send prescription to pharmacy
-                // This would involve updating the database or communicating with a pharmacy API
-                System.out.println("Prescription sent for " + patientName);
+            primaryStage.setScene(mainScene);
+        });
+        // Layout for appointment scheduler
+        VBox schedulerLayout = new VBox(10);
+        schedulerLayout.getChildren().addAll(
+                titleLabel, nameField, ageField, datePicker, healthIssuesField, insuranceField,
+                pharmacyLabel, pharmacyComboBox, scheduleButton, backToMainButton
+        );
+        schedulerLayout.setAlignment(Pos.CENTER);
+        schedulerLayout.setPadding(new Insets(20));
+
+        // Creating scene
+        Scene schedulerScene = new Scene(schedulerLayout, 400, 350);
+
+        // Setting the stage
+        primaryStage.setScene(schedulerScene);
+        primaryStage.setTitle("Appointment Scheduler");
+    }
+    
+    // Method to show the nurse view
+    private void showNurseView(PatientAppointment appointment) {
+        // Creating nurse view elements
+        VBox nurseViewLayout = new VBox(10);
+        nurseViewLayout.setPadding(new Insets(20));
+
+        	// Displaying patient appointments
+            VBox appointmentBox = new VBox(10);
+            appointmentBox.setPadding(new Insets(10));
+            appointmentBox.setStyle("-fx-border-style: solid inside; -fx-border-width: 1; -fx-border-color: black;");
+
+            Label nameLabel = new Label("Name: " + appointment.getName());
+            Label ageLabel = new Label("Age: " + appointment.getAge());
+            Label dateLabel = new Label("Appointment Date: " + appointment.getDate());
+            Label healthIssuesLabel = new Label("Health Issues: " + appointment.getHealthIssues());
+            Label insuranceLabel = new Label("Insurance: " + appointment.getInsurance());
+            Label pharmacyLabel = new Label("Pharmacy: " + appointment.getPharmacy());
+
+            // Vitals section
+            Label vitalsLabel = new Label("Vitals:");
+            TextField heightField = new TextField();
+            heightField.setPromptText("Height");
+            TextField weightField = new TextField();
+            weightField.setPromptText("Weight");
+            TextField bloodPressureField = new TextField();
+            bloodPressureField.setPromptText("Blood Pressure");
+            TextField temperatureField = new TextField();
+            temperatureField.setPromptText("Temperature");
+            TextField healthConcernsField = new TextField();
+            healthConcernsField.setPromptText("Health Concerns");
+
+            Button saveButton = new Button("Save");
+            // Save button action
+            saveButton.setOnAction(e -> {
+                // Save the entered vital information
+                appointment.setHeight(Double.parseDouble(heightField.getText()));
+                appointment.setWeight(Double.parseDouble(weightField.getText()));
+                appointment.setBloodPressure(bloodPressureField.getText());
+                appointment.setTemperature(Double.parseDouble(temperatureField.getText()));
+                appointment.setHealthConcerns(healthConcernsField.getText());
+                updatePatientFile(appointment);
+                closePatientFile(appointment.getName()); // Close the patient file
+                primaryStage.setScene(mainScene);
             });
 
-            rightColumn.getChildren().addAll(new Label("Prescription:"), prescriptionArea, sendPrescriptionButton);
+            appointmentBox.getChildren().addAll(nameLabel, ageLabel, dateLabel, healthIssuesLabel,
+                    insuranceLabel, pharmacyLabel, vitalsLabel, heightField, weightField, bloodPressureField,
+                    temperatureField, healthConcernsField, saveButton);
+            nurseViewLayout.getChildren().add(appointmentBox);
 
-            appointmentBox.getChildren().addAll(leftColumn, rightColumn);
-            layout.getChildren().add(appointmentBox);
+        // Back button to return to main page
+        Button backToMainButton = new Button("Back to Main");
+        backToMainButton.setOnAction(e -> primaryStage.setScene(mainScene));
+        nurseViewLayout.getChildren().add(backToMainButton);
+
+        // Wrap the nurse view layout in a ScrollPane
+        ScrollPane scrollPane = new ScrollPane(nurseViewLayout);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+
+        // Set focus on the back button
+        backToMainButton.requestFocus();
+
+        // Creating scene
+        Scene nurseViewScene = new Scene(scrollPane, 600, 400);
+
+        // Setting the stage
+        primaryStage.setScene(nurseViewScene);
+        primaryStage.setTitle("Nurse View");
+    }
+
+    // Method to show doctor view
+    private void showDoctorView() {
+        // Doctor view elements
+        VBox doctorViewLayout = new VBox(10);
+        doctorViewLayout.setPadding(new Insets(20));
+
+        // Displaying patient appointments
+        for (PatientAppointment appointment : appointments) {
+            VBox appointmentBox = new VBox(10);
+            appointmentBox.setPadding(new Insets(10));
+            appointmentBox.setStyle("-fx-border-style: solid inside; -fx-border-width: 1; -fx-border-color: black;");
+
+            Label nameLabel = new Label("Name: " + appointment.getName());
+            Label ageLabel = new Label("Age: " + appointment.getAge());
+            Label dateLabel = new Label("Date: " + appointment.getDate());
+            Label healthIssuesLabel = new Label("Health Issues: " + appointment.getHealthIssues());
+            Label insuranceLabel = new Label("Insurance: " + appointment.getInsurance());
+            Label pharmacyLabel = new Label("Pharmacy: " + appointment.getPharmacy());
+
+            // Vitals section
+            Label vitalsLabel = new Label("Vitals:");
+            TextField heightField = new TextField(appointment.getHeight() + "");
+            heightField.setPromptText("Height");
+            TextField weightField = new TextField(appointment.getWeight() + "");
+            weightField.setPromptText("Weight");
+            TextField bloodPressureField = new TextField(appointment.getBloodPressure());
+            bloodPressureField.setPromptText("Blood Pressure");
+            TextField temperatureField = new TextField(appointment.getTemperature() + "");
+            temperatureField.setPromptText("Temperature");
+            TextField healthConcernsField = new TextField(appointment.getHealthConcerns());
+            healthConcernsField.setPromptText("Health Concerns");
+
+            // Physical checkup section
+            Label physicalCheckupLabel = new Label("Physical Checkup:");
+            TextField heartRateField = new TextField(appointment.getHeartRate());
+            heartRateField.setPromptText("Heart Rate");
+            TextField skinIrregularitiesField = new TextField(appointment.getSkinIrregularities());
+            skinIrregularitiesField.setPromptText("Skin Irregularities");
+            TextField reflexesField = new TextField(appointment.getReflexes());
+            reflexesField.setPromptText("Reflexes");
+            TextField otherField = new TextField(appointment.getOther());
+            otherField.setPromptText("Other");
+
+            // Update Report and Prescribe Medication section
+            Label updateReportLabel = new Label("Update Report:");
+            TextField updateReportField = new TextField(appointment.getUpdateReport());
+            updateReportField.setPromptText("Update Report");
+            Label prescribeMedicationLabel = new Label("Prescribe Medication:");
+            TextField medicationField = new TextField();
+            Button submitButton = new Button("Submit");
+
+            // Submit button action
+            submitButton.setOnAction(e -> {
+                // Save the entered doctor-specific information
+                appointment.setHeight(Double.parseDouble(heightField.getText()));
+                appointment.setWeight(Double.parseDouble(weightField.getText()));
+                appointment.setBloodPressure(bloodPressureField.getText());
+                appointment.setTemperature(Double.parseDouble(temperatureField.getText()));
+                appointment.setHealthConcerns(healthConcernsField.getText());
+                appointment.setHeartRate(heartRateField.getText());
+                appointment.setSkinIrregularities(skinIrregularitiesField.getText());
+                appointment.setReflexes(reflexesField.getText());
+                appointment.setOther(otherField.getText());
+                appointment.setUpdateReport(updateReportField.getText());
+                appointment.setCurrentMedication(medicationField.getText());
+                updatePatientFile(appointment);
+                closePatientFile(appointment.getName()); // Close the patient file
+                primaryStage.setScene(mainScene);
+            });
+
+            // Adding elements to the appointment box
+            appointmentBox.getChildren().addAll(nameLabel, ageLabel, dateLabel, healthIssuesLabel,
+                    insuranceLabel, pharmacyLabel, vitalsLabel, heightField, weightField, bloodPressureField,
+                    temperatureField, healthConcernsField, physicalCheckupLabel, heartRateField, skinIrregularitiesField,
+                    reflexesField, otherField, updateReportLabel, updateReportField, prescribeMedicationLabel,
+                    medicationField, submitButton);
+
+            doctorViewLayout.getChildren().add(appointmentBox);
         }
 
-        Scene scene = new Scene(layout, 600, 400);
-        primaryStage.setScene(scene);
-        primaryStage.setTitle(doctorUsername + "'s Dashboard");
-        primaryStage.show();
+        // Back button to return to main page
+        Button backToMainButton = new Button("Back to Main");
+        backToMainButton.setOnAction(e -> primaryStage.setScene(mainScene));
+        doctorViewLayout.getChildren().add(backToMainButton);
+
+        // Wrap the doctor view layout in a ScrollPane
+        ScrollPane scrollPane = new ScrollPane(doctorViewLayout);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+
+        // Set focus on the back button
+        backToMainButton.requestFocus();
+
+        // Creating scene
+        Scene doctorViewScene = new Scene(scrollPane, 600, 600);
+
+        // Setting the stage
+        primaryStage.setScene(doctorViewScene);
+        primaryStage.setTitle("Doctor View");
     }
 
-    private void showDashboard(String viewTitle) {
-        Stage dashboardStage = new Stage();
-        dashboardStage.setTitle(viewTitle);
-
-        VBox layout = new VBox(10);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(10));
-        
-        Label lblPlaceholder = new Label("Placeholder for " + viewTitle);
-        layout.getChildren().add(lblPlaceholder);
-
-        Scene scene = new Scene(layout, 400, 300);
-        dashboardStage.setScene(scene);
-        dashboardStage.show();
-    }
-    
-    private void showAccountCreationView(Stage parentStage, String role) {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initOwner(parentStage);
-
-        VBox layout = new VBox(10);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(10));
-
-        // Common fields
-        TextField txtUsername = new TextField();
-        txtUsername.setPromptText("Username");
-        PasswordField txtPassword = new PasswordField();
-        txtPassword.setPromptText("Password");
-
-        // Patient-specific fields
-        TextField txtFirstName = new TextField();
-        txtFirstName.setPromptText("First Name");
-        TextField txtLastName = new TextField();
-        txtLastName.setPromptText("Last Name");
-        TextField txtEmail = new TextField();
-        txtEmail.setPromptText("Email");
-        TextField txtPhone = new TextField();
-        txtPhone.setPromptText("Phone Number");
-
-        Button btnSave = new Button("Save");
-        btnSave.setOnAction(e -> {
-        	setUsername(txtUsername.getText());
-            setPassword(txtPassword.getText());
-            System.out.println(getUsername() + " " + getPassword());
-            if ("Patient View".equals(role)) {
-                // Save patient information and generate an ID
-                String patientId = savePatientInfo(txtFirstName.getText(), txtLastName.getText(), txtEmail.getText(), txtPhone.getText());
-                if (patientId != null) {
-                    showAlert("Account Created", "Patient ID: " + patientId);
-                    stage.close(); // Close the account creation window
-                }
-            } else {
-                // For doctors, nurses, and receptionists just print out the username for now
-                System.out.println("Account created for " + role + ": " + txtUsername.getText());
-                stage.close(); // Close the account creation window
-            }
-        });
-
-        Button btnBack = new Button("Back");
-        btnBack.setOnAction(e -> stage.close());
-
-        layout.getChildren().addAll(new Label("Create Account for " + role), txtUsername, txtPassword);
-        if ("Patient View".equals(role)) {
-            layout.getChildren().addAll(txtFirstName, txtLastName, txtEmail, txtPhone);
-        }
-        layout.getChildren().addAll(btnSave, btnBack);
-
-        Scene scene = new Scene(layout, 300, role.equals("Patient View") ? 300 : 200);
-        stage.setScene(scene);
-        stage.setTitle("Account Creation - " + role);
-        stage.showAndWait();
-    }
-
-    // Save patient information to a file and generate an ID
-    private String savePatientInfo(String firstName, String lastName, String email, String phone) {
-        File file = new File("patients.txt");
-        try (PrintWriter out = new PrintWriter(new FileWriter(file, true))) {
-            // For simplicity, generate an ID based on the hash code of the patient's details
-            String patientId = String.valueOf((firstName + lastName + email + phone).hashCode());
-            out.println(patientId + "," + firstName + "," + lastName + "," + email + "," + phone);
-            return patientId;
-        } catch (IOException e) {
-            showAlert("Error", "Failed to save patient information.");
-            return null;
-        }
-    }
-    
-
-    // Show an alert dialog
+    // Method to show an alert dialog
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
     }
-
 
     public static void main(String[] args) {
         launch(args);
