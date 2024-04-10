@@ -45,6 +45,7 @@ public class Main extends Application {
     private List<PatientAppointment> appointments;
 
     public class PatientAppointment {
+        // Patient appointment fields
         private String name;
         private int age;
         private String date;
