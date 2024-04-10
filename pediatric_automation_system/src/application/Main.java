@@ -19,6 +19,7 @@ import java.util.Map;
 
 public class Main extends Application {
 
+    // Main account variables
     private Stage primaryStage;
     private String userType;
     private Map<String, String> accounts;
